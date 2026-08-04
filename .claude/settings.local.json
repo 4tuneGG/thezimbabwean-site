@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git -c core.safecrlf=false commit -q -m ' *)"
+    ]
+  }
+}
