@@ -6,13 +6,16 @@
 <title>For suppliers — theZimbabwean.company</title>
 <meta name="description" content="We link Zimbabwean artists, manufacturers, designers and suppliers with established businesses ready to sell their products. Show us what you make.">
 <meta name="theme-color" content="#1F3B2D">
-<link rel="canonical" href="https://example.com/">
+<link rel="canonical" href="https://4tunegg.github.io/thezimbabwean-site/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="You make it. We'll connect you to buyers.">
 <meta property="og:description" content="We link Zimbabwean artists, manufacturers, designers and suppliers with established businesses ready to sell their products.">
 <meta property="og:site_name" content="theZimbabwean.company">
+<meta property="og:image" content="https://4tunegg.github.io/thezimbabwean-site/banner.jpg">
+<meta property="og:url" content="https://4tunegg.github.io/thezimbabwean-site/">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preload" as="image" href="banner.jpg">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231F3B2D'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='600' fill='%23F5F2EC' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E">
 
@@ -35,6 +38,41 @@
   .btn-ghost:hover { border-color: #16180F; color: #16180F; }
   .foot-link:hover { color: #E9A76B; }
   .foot-cta:hover { color: #E9A76B; border-color: #E9A76B; }
+
+  /* Hero banner. The photo is 817x540, so it upscales on wide screens —
+     the wash over it is what keeps that softness from reading as blur.
+     Its own layer so the filter tones the photo without touching the text. */
+  .hero-media {
+    position: absolute;
+    inset: 0;
+    background-image: url("banner.jpg");
+    background-size: cover;
+    background-position: 50% 6%;
+    background-repeat: no-repeat;
+    /* The raw sky is a saturated blue that fights the cream/forest palette. */
+    filter: saturate(0.62) contrast(0.94);
+  }
+  /* Heavier on the left, where the headline sits; thins to the right so the
+     tower and sky still carry colour. */
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg,
+      rgba(245,242,236,0.95) 0%,
+      rgba(245,242,236,0.91) 30%,
+      rgba(245,242,236,0.74) 56%,
+      rgba(245,242,236,0.56) 100%);
+  }
+  /* Narrow screens have no free space beside the text — even wash instead. */
+  @media (max-width: 760px) {
+    .hero-media { background-position: 58% 6%; }
+    .hero-scrim {
+      background: linear-gradient(180deg,
+        rgba(245,242,236,0.93) 0%,
+        rgba(245,242,236,0.89) 60%,
+        rgba(245,242,236,0.82) 100%);
+    }
+  }
 
   /* select arrow — appearance:none removes the native one */
   select.field {
@@ -65,8 +103,9 @@
     </div>
   </header>
 
-  <section id="top" style="position: relative; background-color: #EDE9DF; background-image: repeating-linear-gradient(135deg, rgba(31,59,45,0.055) 0 1px, transparent 1px 9px); border-bottom: 1px solid #DCD6C8;">
-    <div style="position: absolute; inset: 0; background: rgba(245,242,236,0.5);"></div>
+  <section id="top" style="position: relative; background-color: #EDE9DF; border-bottom: 1px solid #DCD6C8; overflow: hidden;">
+    <div class="hero-media"></div>
+    <div class="hero-scrim"></div>
     <div style="position: relative; max-width: 1160px; margin: 0 auto; padding: clamp(56px, 9vw, 104px) 24px clamp(64px, 10vw, 116px);">
     <div style="max-width: 46em;">
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A9581F; margin-bottom: 22px;">For makers, manufacturers &amp; suppliers</div>
