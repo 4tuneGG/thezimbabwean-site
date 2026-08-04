@@ -217,9 +217,24 @@
   var form = document.getElementById("supplier-form");
   var status = document.getElementById("form-status");
 
+  // Each dropdown value written as a first-person sentence, so we never have to
+  // guess "a" vs "an" from the label text.
+  var ROLE_SENTENCE = {
+    "Artist / craftsperson": "I am an artist and craftsperson.",
+    "Manufacturer":          "I am a manufacturer.",
+    "Designer":              "I am a designer.",
+    "Supplier / importer":   "I am a supplier and importer.",
+    "Other":                 "My work doesn't fit neatly into one of your categories."
+  };
+
   function waNumber(raw) {
     var digits = (raw || "").replace(/\D/g, "");
     return digits.indexOf("263") === 0 ? digits : "263" + digits.replace(/^0+/, "");
+  }
+
+  // Avoid "Tendai Moyo.." when someone types their own full stop.
+  function sentence(text) {
+    return /[.!?]$/.test(text) ? text : text + ".";
   }
 
   form.addEventListener("submit", function (e) {
@@ -227,20 +242,24 @@
     var f = new FormData(form);
     var v = function (k) { return (f.get(k) || "").toString().trim(); };
 
-    var lines = [
-      "Hello [theZimbabwean].company — I'd like to join your supplier network.",
-      "",
-      "Name: " + v("name"),
-      v("business") ? "Business / brand: " + v("business") : null,
-      "What I do: " + v("role"),
-      "Location: " + v("location"),
-      "",
-      "What I make or supply:",
-      v("product"),
-      v("link") ? "\nCatalogue / link: " + v("link") : null
-    ].filter(function (l) { return l !== null; });
+    var role = v("role");
+    var product = v("product").replace(/\r?\n/g, "\r\n");
 
-    var url = "https://wa.me/" + waNumber(WHATSAPP_NUMBER) + "?text=" + encodeURIComponent(lines.join("\n"));
+    // One thought per block; blocks are separated by a blank line.
+    var blocks = [
+      "Hello [theZimbabwean].company — I'd like to join your supplier network.",
+      "My name is " + sentence(v("name")),
+      v("business") ? "My business is " + sentence(v("business")) : null,
+      ROLE_SENTENCE[role] || "This is what I do: " + sentence(role),
+      "I am based in " + sentence(v("location")),
+      "This is what I make and supply:\r\n" + product,
+      v("link") ? "You can see my work here:\r\n" + v("link") : null
+    ].filter(function (b) { return b !== null; });
+
+    // CRLF, not bare LF: WhatsApp Web/Desktop collapses %0A into a space,
+    // which is why every line ran together. %0D%0A is honoured by all clients.
+    var message = blocks.join("\r\n\r\n");
+    var url = "https://wa.me/" + waNumber(WHATSAPP_NUMBER) + "?text=" + encodeURIComponent(message);
 
     var win = window.open(url, "_blank", "noopener");
     if (!win) {
