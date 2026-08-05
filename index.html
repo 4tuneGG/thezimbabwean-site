@@ -89,13 +89,17 @@
      fields made iOS Safari zoom in on focus and never zoom back; nav links
      were 18px tall against a 44px recommended tap target. */
   @media (max-width: 760px) {
-    :root { --header-h: 74px; }
+    /* Logo (240px) + CTA (190px) + gap need 450px against 335px available, so
+       a one-row sticky bar is only reachable by shrinking both into unreadable
+       text. Letting the header scroll away instead frees the whole viewport
+       and costs nothing: the hero CTA sits right underneath it. */
+    header { position: static !important; }
+    :root { --header-h: 16px; }
 
-    /* Only the logo and the CTA survive; the three anchors are duplicated in
-       the footer, and they were what forced the header to wrap. */
+    /* Anchors duplicated in the footer; dropping them here keeps the hero
+       above the fold. */
     .nav-secondary { display: none; }
-    .header-inner { padding: 12px 20px !important; }
-    .header-logo-tag { font-size: 9.5px !important; }
+    .header-inner { padding: 14px 20px !important; gap: 12px !important; }
 
     /* 16px is the threshold below which iOS auto-zooms a focused field. */
     #supplier-form input,
@@ -109,9 +113,10 @@
     .form-actions .btn-primary { justify-content: center; }
     .form-actions span { max-width: none !important; }
 
-    /* Padding to bring the footer links up to a thumb-sized target. */
-    .foot-link, .foot-cta { padding-top: 11px; padding-bottom: 11px; }
-    .footer-nav { gap: 4px 22px !important; }
+    /* Bring every remaining link up to a thumb-sized target (44px). */
+    .foot-link, .foot-cta { min-height: 44px; align-items: center; display: inline-flex; }
+    .footer-nav { gap: 0 22px !important; }
+    .header-inner .btn-primary { padding: 13px 18px !important; }
   }
 
   /* select arrow — appearance:none removes the native one */
