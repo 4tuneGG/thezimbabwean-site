@@ -23,7 +23,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <style>
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    /* Stops iOS inflating body text when the phone is turned landscape. */
+    -webkit-text-size-adjust: 100%;
+  }
+  /* The header is sticky, so anchor jumps must stop clear of it or the
+     section heading lands underneath. */
+  :root { --header-h: 92px; }
+  section[id] { scroll-margin-top: var(--header-h); }
+  a, button { -webkit-tap-highlight-color: rgba(31,59,45,0.14); }
   body { margin: 0; background: #F5F2EC; color: #16180F; -webkit-font-smoothing: antialiased; }
   * { box-sizing: border-box; }
   a { color: #1F3B2D; text-decoration: none; }
@@ -74,6 +83,37 @@
     }
   }
 
+  /* ---- Mobile ----
+     Measured at 375px before these rules: the sticky header wrapped to three
+     rows and ate 178px (22% of the screen) on every scroll; the 15px form
+     fields made iOS Safari zoom in on focus and never zoom back; nav links
+     were 18px tall against a 44px recommended tap target. */
+  @media (max-width: 760px) {
+    :root { --header-h: 74px; }
+
+    /* Only the logo and the CTA survive; the three anchors are duplicated in
+       the footer, and they were what forced the header to wrap. */
+    .nav-secondary { display: none; }
+    .header-inner { padding: 12px 20px !important; }
+    .header-logo-tag { font-size: 9.5px !important; }
+
+    /* 16px is the threshold below which iOS auto-zooms a focused field. */
+    #supplier-form input,
+    #supplier-form select,
+    #supplier-form textarea { font-size: 16px !important; }
+
+    /* Full-width buttons: easier to hit, and they stop looking stranded
+       once they stack. */
+    .hero-actions a { flex: 1 1 100%; justify-content: center; }
+    .form-actions { flex-direction: column; align-items: stretch !important; gap: 14px !important; }
+    .form-actions .btn-primary { justify-content: center; }
+    .form-actions span { max-width: none !important; }
+
+    /* Padding to bring the footer links up to a thumb-sized target. */
+    .foot-link, .foot-cta { padding-top: 11px; padding-bottom: 11px; }
+    .footer-nav { gap: 4px 22px !important; }
+  }
+
   /* select arrow — appearance:none removes the native one */
   select.field {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%2355584A' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -89,15 +129,15 @@
 <div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; background: #F5F2EC; min-height: 100vh;">
 
   <header style="position: sticky; top: 0; z-index: 20; background: rgba(245,242,236,0.94); backdrop-filter: blur(8px); border-bottom: 1px solid #DCD6C8;">
-    <div style="max-width: 1160px; margin: 0 auto; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div class="header-inner" style="max-width: 1160px; margin: 0 auto; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
       <a href="#top" style="display: flex; flex-direction: column; gap: 2px;">
         <span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; color: #16180F;">the<span style="color: #A9581F;">Z</span>imbabwean<span style="color: #6E6A58; font-weight: 400;">.company</span></span>
-        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6A58;">Building Zimbabwean commerce</span>
+        <span class="header-logo-tag" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6A58;">Building Zimbabwean commerce</span>
       </a>
       <nav style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-        <a class="nav-link" href="#who" style="font-size: 14px; color: #45483A; white-space: nowrap;">Who we work with</a>
-        <a class="nav-link" href="#why" style="font-size: 14px; color: #45483A; white-space: nowrap;">Why work with us</a>
-        <a class="nav-link" href="#apply" style="font-size: 14px; color: #16180F; font-weight: 500; white-space: nowrap; border-bottom: 1px solid #16180F; padding-bottom: 2px;">For suppliers</a>
+        <a class="nav-link nav-secondary" href="#who" style="font-size: 14px; color: #45483A; white-space: nowrap;">Who we work with</a>
+        <a class="nav-link nav-secondary" href="#why" style="font-size: 14px; color: #45483A; white-space: nowrap;">Why work with us</a>
+        <a class="nav-link nav-secondary" href="#apply" style="font-size: 14px; color: #16180F; font-weight: 500; white-space: nowrap; border-bottom: 1px solid #16180F; padding-bottom: 2px;">For suppliers</a>
         <a class="btn-primary" href="#apply" style="font-size: 14px; font-weight: 500; color: #F5F2EC; background: #1F3B2D; padding: 10px 18px; border-radius: 2px; display: inline-flex; align-items: center; white-space: nowrap;">Show us what you make</a>
       </nav>
     </div>
@@ -111,7 +151,7 @@
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A9581F; margin-bottom: 22px;">For makers, manufacturers &amp; suppliers</div>
       <h1 style="font-family: 'Source Serif 4', Georgia, serif; font-size: clamp(38px, 6.4vw, 68px); line-height: 1.02; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 26px; color: #16180F; text-wrap: balance;">You make it.<br>We'll connect you to buyers.</h1>
       <p style="font-size: clamp(16px, 2.1vw, 19px); line-height: 1.62; color: #45483A; margin: 0 0 38px; max-width: 30em; text-wrap: pretty;">We link Zimbabwean artists, manufacturers, designers and suppliers with established businesses ready to sell their products. If you make or supply something good, we want to see it.</p>
-      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+      <div class="hero-actions" style="display: flex; gap: 14px; flex-wrap: wrap;">
         <a class="btn-primary" href="#apply" style="font-size: 15.5px; font-weight: 500; color: #F5F2EC; background: #1F3B2D; padding: 16px 30px; border-radius: 2px; display: inline-flex; align-items: center; white-space: nowrap;">Show us what you make</a>
         <a class="btn-ghost" href="#who" style="font-size: 15.5px; font-weight: 500; color: #16180F; border: 1px solid #C6BFAD; padding: 16px 30px; border-radius: 2px; background: transparent; display: inline-flex; align-items: center; white-space: nowrap;">Who we work with</a>
       </div>
@@ -222,7 +262,7 @@
           <span style="font-size: 13px; font-weight: 500; color: #16180F;">Catalogue, website or social link <span style="color: #8B8674; font-weight: 400;">— optional, but the most useful thing you can give us</span></span>
           <input name="link" type="text" placeholder="instagram.com/yourbrand, a WhatsApp catalogue, or a Drive folder of photos" style="font-size: 15px; padding: 13px 14px; border: 1px solid #C6BFAD; background: #FFFFFF; border-radius: 2px; color: #16180F;">
         </label>
-        <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px solid #E4DFD2; padding-top: 26px; margin-top: 2px;">
+        <div class="form-actions" style="grid-column: 1 / -1; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px solid #E4DFD2; padding-top: 26px; margin-top: 2px;">
           <button class="btn-primary" type="submit" style="font-size: 15.5px; font-weight: 500; color: #F5F2EC; background: #1F3B2D; border: none; padding: 16px 30px; border-radius: 2px; cursor: pointer; white-space: nowrap; line-height: 1.2;">Continue on WhatsApp</button>
           <span style="font-size: 13px; line-height: 1.5; color: #6E6A58; max-width: 24em;">You'll be taken to WhatsApp with your details ready to send.</span>
         </div>
@@ -237,7 +277,7 @@
         <div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; font-weight: 600; color: #F5F2EC;">the<span style="color: #E9A76B;">Z</span>imbabwean<span style="color: #9A9583; font-weight: 400;">.company</span></div>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #9A9583;">Zimbabwean business insight &amp; connection · Harare, Zimbabwe</div>
       </div>
-      <nav style="display: flex; gap: 22px; flex-wrap: wrap;">
+      <nav class="footer-nav" style="display: flex; gap: 22px; flex-wrap: wrap;">
         <a class="foot-link" href="#top" style="font-size: 14px; color: #E7E3D8; white-space: nowrap;">Home</a>
         <a class="foot-link" href="#who" style="font-size: 14px; color: #E7E3D8; white-space: nowrap;">Who we work with</a>
         <a class="foot-link" href="#why" style="font-size: 14px; color: #E7E3D8; white-space: nowrap;">Why work with us</a>
