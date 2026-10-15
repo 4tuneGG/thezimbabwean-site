@@ -41,14 +41,31 @@ Live at <https://zimbabwean.company> (and `www.`, which serves the same page).
 
 The domain is registered with Cloudflare and the DNS lives there: four A and
 four AAAA records on the apex pointing at GitHub Pages, plus `www` as a CNAME
-to `4tunegg.github.io`. All nine are **DNS-only (grey cloud), not proxied** --
-putting Cloudflare's proxy in front of Pages blocks the challenge GitHub needs
-to renew the TLS certificate. If the certificate ever stops renewing, check
-that first.
+to `4tunegg.github.io`.
 
-If you do ever want the records proxied, Cloudflare's SSL/TLS mode must be
-**Full** -- "Flexible" sends plain HTTP to Pages, which forces HTTPS, and the
-two bounce off each other in a redirect loop.
+**GitHub Pages hosts the files; Cloudflare proxies them.** All nine records are
+proxied (orange cloud), and that is deliberate -- GitHub Pages' IP range
+(185.199.108-111.153) is unreachable from Zimbabwean networks, on both fixed
+line and mobile. Unproxied, the site resolved fine and then timed out on
+connect for exactly the audience it is for. Proxied, visitors reach
+Cloudflare's edge instead and Cloudflare fetches from GitHub, so the blocked
+range never appears in the path.
+
+Two things this depends on, so don't change them casually:
+
+- **SSL/TLS mode must stay `Full`.** "Flexible" sends plain HTTP to Pages,
+  which forces HTTPS, and the two bounce off each other in a redirect loop.
+  `Full` also means Cloudflare won't reject the origin certificate if GitHub
+  ever fails to renew it, which proxying can cause.
+- **The `_github-pages-challenge-4tunegg` TXT record must stay.** It is what
+  keeps the domain verified against takeover. It is a DNS record, so the proxy
+  doesn't affect it.
+
+The records were unproxied up to 2026-10-15, which was necessary while GitHub
+issued the certificate and verified domain ownership -- the proxy blocks the
+challenge both of those need. Both are complete, so that constraint is gone.
+If the certificate ever needs reissuing, grey-cloud the records, let GitHub
+issue, then turn the proxy back on.
 
 ## Deploying
 
