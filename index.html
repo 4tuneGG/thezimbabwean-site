@@ -405,24 +405,40 @@
 
   // The bottom CTA only earns its space in the stretch between the hero and
   // the form -- over either of those it is redundant, and over the form it
-  // would sit on top of the fields. rootMargin means "in the middle band of
-  // the screen" rather than "touching the edge of it".
+  // would sit on top of the fields.
+  //
+  // Deliberately a throttled scroll handler rather than IntersectionObserver:
+  // IO callbacks depend on the compositing pipeline, which means they never
+  // arrive in some embedded/background contexts. Reading two rects on scroll
+  // always works and costs nothing measurable at this scale.
   var bar = document.getElementById("mobile-cta");
   if (bar) {
-    if ("IntersectionObserver" in window) {
-      var showing = { top: false, apply: false };
-      var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { showing[e.target.id] = e.isIntersecting; });
-        bar.setAttribute("data-hidden", (showing.top || showing.apply) ? "true" : "false");
-      }, { rootMargin: "-20% 0px -20% 0px", threshold: 0 });
+    var heroEl = document.getElementById("top");
+    var formEl = document.getElementById("apply");
+    var last = 0;
 
-      ["top", "apply"].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) obs.observe(el);
-      });
-    } else {
-      bar.setAttribute("data-hidden", "false");
+    function inMiddleBand(el) {
+      if (!el) return false;
+      var r = el.getBoundingClientRect();
+      var h = window.innerHeight || document.documentElement.clientHeight;
+      return r.bottom > h * 0.2 && r.top < h * 0.8;
     }
+
+    function updateBar() {
+      var redundant = inMiddleBand(heroEl) || inMiddleBand(formEl);
+      bar.setAttribute("data-hidden", redundant ? "true" : "false");
+    }
+
+    function onScroll() {
+      var now = Date.now();
+      if (now - last < 100) return;
+      last = now;
+      updateBar();
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateBar);
+    updateBar();
   }
 })();
 </script>
