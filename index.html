@@ -117,6 +117,38 @@
     .foot-link, .foot-cta { min-height: 44px; align-items: center; display: inline-flex; }
     .footer-nav { gap: 0 22px !important; }
     .header-inner .btn-primary { padding: 13px 18px !important; }
+
+    /* Section padding and the form card's own padding were stacking: 24 + 24
+       each side left the fields 277px of a 375px screen. */
+    #supplier-form { padding: 16px !important; }
+    section[id] > div:last-of-type { padding-top: 44px !important; padding-bottom: 48px !important; }
+
+    /* The header isn't sticky on mobile, so without this there is no call to
+       action across the ~4 screens between the hero and the form. */
+    .mobile-cta {
+      display: block;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: rgba(245,242,236,0.96);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid #DCD6C8;
+      transform: translateY(0);
+      transition: transform 0.25s ease;
+    }
+    .mobile-cta[data-hidden="true"] { transform: translateY(130%); }
+    .mobile-cta a {
+      display: flex; justify-content: center; align-items: center; width: 100%;
+      font-size: 15.5px; font-weight: 500; color: #F5F2EC; background: #1F3B2D;
+      padding: 15px 20px; border-radius: 2px; min-height: 44px;
+    }
+    /* Keep the bar clear of the last footer row. */
+    body { padding-bottom: 78px; }
+  }
+
+  .mobile-cta { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-cta { transition: none; }
   }
 
   /* select arrow — appearance:none removes the native one */
@@ -293,6 +325,10 @@
   </footer>
 </div>
 
+<div class="mobile-cta" id="mobile-cta" data-hidden="true">
+  <a href="#apply">Show us what you make</a>
+</div>
+
 <script>
 (function () {
   // Change this one line if the WhatsApp number ever changes.
@@ -361,6 +397,28 @@
     a.textContent = "Didn't open? Tap here.";
     status.appendChild(a);
   });
+
+  // The bottom CTA only earns its space in the stretch between the hero and
+  // the form -- over either of those it is redundant, and over the form it
+  // would sit on top of the fields. rootMargin means "in the middle band of
+  // the screen" rather than "touching the edge of it".
+  var bar = document.getElementById("mobile-cta");
+  if (bar) {
+    if ("IntersectionObserver" in window) {
+      var showing = { top: false, apply: false };
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { showing[e.target.id] = e.isIntersecting; });
+        bar.setAttribute("data-hidden", (showing.top || showing.apply) ? "true" : "false");
+      }, { rootMargin: "-20% 0px -20% 0px", threshold: 0 });
+
+      ["top", "apply"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) obs.observe(el);
+      });
+    } else {
+      bar.setAttribute("data-hidden", "false");
+    }
+  }
 })();
 </script>
 </body>
