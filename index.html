@@ -100,7 +100,9 @@
     header { position: static !important; }
     :root { --header-h: 16px; }
 
-    .header-inner nav { display: none; }
+    /* !important: the nav carries an inline display:flex, which beats a
+       plain stylesheet rule. */
+    .header-inner nav { display: none !important; }
     .header-inner { padding: 14px 20px !important; gap: 12px !important; }
 
     /* 16px is the threshold below which iOS auto-zooms a focused field. */
