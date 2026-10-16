@@ -92,16 +92,15 @@
      fields made iOS Safari zoom in on focus and never zoom back; nav links
      were 18px tall against a 44px recommended tap target. */
   @media (max-width: 760px) {
-    /* Logo (240px) + CTA (190px) + gap need 450px against 335px available, so
-       a one-row sticky bar is only reachable by shrinking both into unreadable
-       text. Letting the header scroll away instead frees the whole viewport
-       and costs nothing: the hero CTA sits right underneath it. */
+    /* The header is just the wordmark on a phone. Its CTA sat directly above
+       an identical button in the banner, and the nav anchors are repeated in
+       the footer -- so the whole nav goes, rather than wrapping onto a second
+       row and pushing the hero down. Non-sticky too: the bottom bar carries
+       the CTA once the banner scrolls away. */
     header { position: static !important; }
     :root { --header-h: 16px; }
 
-    /* Anchors duplicated in the footer; dropping them here keeps the hero
-       above the fold. */
-    .nav-secondary { display: none; }
+    .header-inner nav { display: none; }
     .header-inner { padding: 14px 20px !important; gap: 12px !important; }
 
     /* 16px is the threshold below which iOS auto-zooms a focused field. */
@@ -119,7 +118,6 @@
     /* Bring every remaining link up to a thumb-sized target (44px). */
     .foot-link, .foot-cta { min-height: 44px; align-items: center; display: inline-flex; }
     .footer-nav { gap: 0 22px !important; }
-    .header-inner .btn-primary { padding: 13px 18px !important; }
 
     /* Section padding and the form card's own padding were stacking: 24 + 24
        each side left the fields 277px of a 375px screen. */
