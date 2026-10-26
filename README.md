@@ -35,6 +35,49 @@ There's no backend. On submit, the page builds a formatted message from the fiel
 and opens `https://wa.me/<number>?text=<message>` so the enquiry lands in WhatsApp
 with everything already typed out. If the popup is blocked, it navigates directly instead.
 
+## Lead tracking (Meta pixel)
+
+The page reports to the Meta dataset **Zim.company Data**, ID `1670660514650846`,
+owned by the **Supply The Gallery** business portfolio. Ads run from
+**Zim.company Ad Account A** (`1094165106862577`).
+
+Two events fire:
+
+| Event | When | Sent with |
+| --- | --- | --- |
+| `PageView` | Every page load, from the base code in `<head>`. | Nothing extra. |
+| `Lead` | The supplier submits the form, just before the WhatsApp hand-off. | `content_name` = the "What you do" dropdown value. |
+
+`Lead` is fired from inside the submit handler rather than set up as a codeless
+button rule in Events Manager. Codeless rules match on button text, and this
+button navigates away to `wa.me` immediately -- firing it ourselves is the only
+way to be sure the event leaves the page first. Don't add a rule for
+"Continue on WhatsApp" in Events Manager as well, or every lead counts twice.
+
+Nothing from the form body goes to Meta. The name, location, product
+description and link are the supplier's own words and stay out of the event.
+The dropdown value is a fixed list of five options, so it carries no personal
+detail and tells us which kind of supplier is answering the ad.
+
+### Setting up the ads against this
+
+1. **Verify the domain.** Business settings -> Brand safety -> Domains, add
+   `zimbabwean.company`. Use the meta-tag method and paste the tag into
+   `index.html` next to the other `<meta>` tags. Without this, Meta won't let
+   the ad account optimise for events on a domain it can't prove you own.
+2. **Check the event arrives.** Events Manager -> the dataset -> Test events,
+   then load <https://zimbabwean.company>, fill the form and submit. `PageView`
+   and `Lead` should both appear.
+3. **Rank `Lead` first** in Aggregated Event Measurement for the domain, so it
+   survives iOS opt-outs.
+4. **Build the campaign** on objective **Leads**, conversion location
+   **Website**, and pick `Lead` on this dataset as the conversion event. The
+   existing Page post can be used as the creative via "Use existing post".
+
+No custom conversion is needed -- `Lead` is a standard event, so it is
+selectable directly once it has fired at least once. Add one only if you later
+want to split leads by `content_name` (manufacturers vs artists, say).
+
 ## Domain
 
 Live at <https://zimbabwean.company> (and `www.`, which serves the same page).

@@ -166,6 +166,23 @@
 
   .form-status { grid-column: 1 / -1; font-size: 13.5px; line-height: 1.5; color: #1F3B2D; margin: 0; }
 </style>
+<!-- Meta Pixel. Dataset "Zim.company Data" (1670660514650846), owned by the
+     Supply The Gallery business portfolio. PageView fires here; the Lead event
+     fires from the form handler at the bottom of the page. -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1670660514650846');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display: none" alt=""
+  src="https://www.facebook.com/tr?id=1670660514650846&ev=PageView&noscript=1"></noscript>
 </head>
 <body>
 <div style="font-family: 'IBM Plex Sans', Helvetica, sans-serif; background: #F5F2EC; min-height: 100vh;">
@@ -385,6 +402,16 @@
     // which is why every line ran together. %0D%0A is honoured by all clients.
     var message = blocks.join("\r\n\r\n");
     var url = "https://wa.me/" + waNumber(WHATSAPP_NUMBER) + "?text=" + encodeURIComponent(message);
+
+    // Count the lead before the hand-off, not after: on mobile the popup is
+    // usually blocked and we navigate straight to WhatsApp, so anything fired
+    // after this point may never leave the page.
+    //
+    // Only the dropdown value goes to Meta. The name, location, description and
+    // link are the supplier's own words -- those stay between them and us.
+    if (typeof fbq === "function") {
+      fbq("track", "Lead", { content_name: role });
+    }
 
     var win = window.open(url, "_blank", "noopener");
     if (!win) {
