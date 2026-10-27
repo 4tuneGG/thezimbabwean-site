@@ -364,6 +364,33 @@ fbq('track', 'PageView');
   var form = document.getElementById("supplier-form");
   var status = document.getElementById("form-status");
 
+  // The Meta funnel. PageView fires from the base code in the head; these mark
+  // the steps that actually tell us something:
+  //
+  //   ViewContent  the form came into view
+  //   FormStart    they filled in their first field
+  //   Lead         they pressed the button and we handed off to WhatsApp
+  //
+  // Lead is the conversion. We cannot see the WhatsApp message being sent --
+  // that happens inside WhatsApp, off this page -- so the button press, with
+  // every required field filled, is the last moment this page can honestly
+  // observe. Anything further would be us guessing.
+  function track(name, params, custom) {
+    if (typeof fbq !== "function") return;
+    fbq(custom ? "trackCustom" : "track", name, params || {});
+  }
+
+  // These are funnel steps, not counters: a second ViewContent from scrolling
+  // back up would tell Meta nothing and cost us a cleaner signal.
+  function once(fn) {
+    var fired = false;
+    return function () {
+      if (fired) return;
+      fired = true;
+      fn();
+    };
+  }
+
   // Each dropdown value written as a first-person sentence, so we never have to
   // guess "a" vs "an" from the label text.
   var ROLE_SENTENCE = {
@@ -383,6 +410,12 @@ fbq('track', 'PageView');
   function sentence(text) {
     return /[.!?]$/.test(text) ? text : text + ".";
   }
+
+  // "input" covers typing, "change" covers the dropdown -- someone who picks
+  // what they do and nothing else has still started.
+  var markFormStart = once(function () { track("FormStart", {}, true); });
+  form.addEventListener("input", markFormStart);
+  form.addEventListener("change", markFormStart);
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -414,9 +447,7 @@ fbq('track', 'PageView');
     //
     // Only the dropdown value goes to Meta. The name, location, description and
     // link are the supplier's own words -- those stay between them and us.
-    if (typeof fbq === "function") {
-      fbq("track", "Lead", { content_name: role });
-    }
+    track("Lead", { content_name: role });
 
     var win = window.open(url, "_blank", "noopener");
     if (!win) {
@@ -435,6 +466,14 @@ fbq('track', 'PageView');
     status.appendChild(a);
   });
 
+  // Shared by the CTA bar and the ViewContent event below.
+  function inMiddleBand(el) {
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    var h = window.innerHeight || document.documentElement.clientHeight;
+    return r.bottom > h * 0.2 && r.top < h * 0.8;
+  }
+
   // The bottom CTA only earns its space in the stretch between the hero and
   // the form -- over either of those it is redundant, and over the form it
   // would sit on top of the fields.
@@ -448,13 +487,6 @@ fbq('track', 'PageView');
     var heroEl = document.getElementById("top");
     var formEl = document.getElementById("apply");
     var last = 0;
-
-    function inMiddleBand(el) {
-      if (!el) return false;
-      var r = el.getBoundingClientRect();
-      var h = window.innerHeight || document.documentElement.clientHeight;
-      return r.bottom > h * 0.2 && r.top < h * 0.8;
-    }
 
     function updateBar() {
       var redundant = inMiddleBand(heroEl) || inMiddleBand(formEl);
@@ -471,6 +503,36 @@ fbq('track', 'PageView');
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", updateBar);
     updateBar();
+  }
+
+  // ViewContent uses the same rect-on-scroll approach as the bar, for the same
+  // reason given above -- an event that silently never fires is worse than no
+  // event at all.
+  //
+  // Trailing-edge throttle, not leading: a leading one can swallow the last
+  // check of a fast scroll that ends with the form on screen, which is exactly
+  // the case we are trying to catch.
+  var applyEl = document.getElementById("apply");
+  if (applyEl) {
+    var pending = null;
+    var markFormSeen = once(function () {
+      track("ViewContent", { content_name: "Supplier form" });
+    });
+
+    function checkSeen() {
+      pending = null;
+      if (!inMiddleBand(applyEl)) return;
+      markFormSeen();
+      window.removeEventListener("scroll", scheduleSeenCheck);
+    }
+
+    function scheduleSeenCheck() {
+      if (pending) return;
+      pending = setTimeout(checkSeen, 150);
+    }
+
+    window.addEventListener("scroll", scheduleSeenCheck, { passive: true });
+    checkSeen();
   }
 })();
 </script>

@@ -41,42 +41,65 @@ The page reports to the Meta dataset **Zim.company Data**, ID `1670660514650846`
 owned by the **Supply The Gallery** business portfolio. Ads run from
 **Zim.company Ad Account A** (`1094165106862577`).
 
-Two events fire:
+Four events fire, one per step of the funnel:
 
 | Event | When | Sent with |
 | --- | --- | --- |
 | `PageView` | Every page load, from the base code in `<head>`. | Nothing extra. |
-| `Lead` | The supplier submits the form, just before the WhatsApp hand-off. | `content_name` = the "What you do" dropdown value. |
+| `ViewContent` | The form section scrolls into view. | `content_name` = `Supplier form`. |
+| `FormStart` | The first field is typed in or chosen. Custom event, not a standard one -- Meta has no standard event for starting a form. | Nothing extra. |
+| `Lead` | The submit button is pressed, just before the WhatsApp hand-off. | `content_name` = the "What you do" dropdown value. |
 
-`Lead` is fired from inside the submit handler rather than set up as a codeless
-button rule in Events Manager. Codeless rules match on button text, and this
-button navigates away to `wa.me` immediately -- firing it ourselves is the only
-way to be sure the event leaves the page first. Don't add a rule for
-"Continue on WhatsApp" in Events Manager as well, or every lead counts twice.
+`Lead` is the conversion the ad set optimises for.
+
+### Why `Lead` fires on the button, not on the message being sent
+
+The honest answer is that the page cannot see the message being sent. The
+hand-off opens `wa.me` in WhatsApp, which is a different application; nothing
+comes back. The button press -- with every required field filled, since the
+form is validated first -- is the last thing this page can observe.
+
+The gap is real and worth remembering when reading the numbers: someone can
+press the button, land in WhatsApp and never hit send. So `Lead` counts intent
+to message, not messages received. Judge cost per lead against what actually
+arrives in WhatsApp, not against the figure in Ads Manager.
+
+`ViewContent` and `FormStart` exist to make that gap visible from the other
+side. If `ViewContent` is high and `FormStart` is low, the form is being seen
+and ignored. If `FormStart` is high and `Lead` is low, people are starting and
+giving up partway -- a form problem, not an ad problem.
+
+All three are fired from the page's own code rather than set up as codeless
+rules in Events Manager. Codeless rules match on button text, and this button
+navigates away immediately; firing them ourselves is the only way to be sure
+the event leaves the page first. Don't add rules for the same actions in
+Events Manager as well, or everything counts twice.
 
 Nothing from the form body goes to Meta. The name, location, product
-description and link are the supplier's own words and stay out of the event.
+description and link are the supplier's own words and stay out of the events.
 The dropdown value is a fixed list of five options, so it carries no personal
 detail and tells us which kind of supplier is answering the ad.
 
 ### Setting up the ads against this
 
-1. **Verify the domain.** Business settings -> Brand safety -> Domains, add
-   `zimbabwean.company`. Use the meta-tag method and paste the tag into
-   `index.html` next to the other `<meta>` tags. Without this, Meta won't let
-   the ad account optimise for events on a domain it can't prove you own.
-2. **Check the event arrives.** Events Manager -> the dataset -> Test events,
-   then load <https://zimbabwean.company>, fill the form and submit. `PageView`
-   and `Lead` should both appear.
+1. **Verify the domain.** Done -- the `facebook-domain-verification` meta tag
+   is in `index.html` and Business settings has confirmed it. Leave the tag
+   where it is; verification is rechecked, not one-and-done.
+2. **Check the events arrive.** Events Manager -> the dataset -> Test events,
+   then load <https://zimbabwean.company>, scroll to the form, fill it and
+   submit. All four should appear in order.
 3. **Rank `Lead` first** in Aggregated Event Measurement for the domain, so it
    survives iOS opt-outs.
 4. **Build the campaign** on objective **Leads**, conversion location
-   **Website**, and pick `Lead` on this dataset as the conversion event. The
-   existing Page post can be used as the creative via "Use existing post".
+   **Website**, and pick `Lead` on this dataset as the conversion event.
+
+Until `Lead` has fired at least once, Events Manager reports the dataset as
+having no conversion events set up, and the ad set has nothing to optimise
+toward. One real submission clears it.
 
 No custom conversion is needed -- `Lead` is a standard event, so it is
-selectable directly once it has fired at least once. Add one only if you later
-want to split leads by `content_name` (manufacturers vs artists, say).
+selectable directly once it has fired. Add one only if you later want to split
+leads by `content_name` (manufacturers vs artists, say).
 
 ## Domain
 
