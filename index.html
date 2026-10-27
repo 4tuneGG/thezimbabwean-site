@@ -449,10 +449,21 @@ fbq('track', 'PageView');
     // link are the supplier's own words -- those stay between them and us.
     track("Lead", { content_name: role });
 
+    // The popup has to be opened in the same tick as the click or the browser
+    // treats it as unsolicited and blocks it, so this cannot be delayed.
     var win = window.open(url, "_blank", "noopener");
     if (!win) {
-      // Popup blocked (common on mobile browsers) — go directly instead.
-      window.location.href = url;
+      // Popup blocked, which is the common case on mobile. Navigate instead --
+      // but not in the same tick. fbq sends its request asynchronously, and
+      // leaving the page immediately cancels it in flight. That is not a
+      // theoretical risk: the first live test of this path lost its Lead
+      // exactly this way, while ViewContent, fired seconds earlier, arrived.
+      //
+      // Half a second is unnoticeable next to opening another app, and it is
+      // the difference between a counted lead and an invisible one.
+      status.hidden = false;
+      status.textContent = "Opening WhatsApp with your details…";
+      setTimeout(function () { window.location.href = url; }, 500);
       return;
     }
     status.hidden = false;
