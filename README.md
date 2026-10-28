@@ -9,6 +9,7 @@ Static landing page for the supplier / maker network. Hosted on GitHub Pages.
 | `index.html` | The live page. Self-contained — no build step, no dependencies. |
 | `banner.jpg` | Hero background (Joina City, Harare). 817x540 — see note below. |
 | `Suppliers.dc.html` | Original design-tool export, kept for reference. **Not** served; it needs a `support.js` runtime that isn't in this repo. |
+| `worker/capi.js` | Cloudflare Worker behind `zimbabwean.company/capi`. Relays events to Meta's Conversions API. Deployed separately from the site -- see below. |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |
 | `CNAME` | Custom domain. Holds `zimbabwean.company`. |
 
@@ -100,6 +101,66 @@ toward. One real submission clears it.
 No custom conversion is needed -- `Lead` is a standard event, so it is
 selectable directly once it has fired. Add one only if you later want to split
 leads by `content_name` (manufacturers vs artists, say).
+
+## The Conversions API relay
+
+Every event is sent twice: once by the browser pixel, once server-side by a
+Cloudflare Worker. Meta matches the pair on `event_name` + `event_id` and
+counts it once.
+
+This is not belt and braces. The browser copy is the one that goes missing --
+ad blockers drop `fbevents.js`, iOS tracking restrictions drop the request,
+and a page navigating to WhatsApp can kill it mid-flight. The server copy
+leaves from Cloudflare and none of that applies.
+
+| | |
+| --- | --- |
+| Worker | `zim-capi`, source in `worker/capi.js` |
+| Routes | `zimbabwean.company/capi`, `www.zimbabwean.company/capi` |
+| Account | `3bef49b210224eedf429fc66c061a006` |
+| Zone | `7da0bc45b27ffc740d530f1d9779fa26` |
+
+It sits on the site's own domain on purpose. Same-origin means no CORS
+preflight, and -- the part that matters -- the browser sends the `_fbp` and
+`_fbc` cookies, which are most of how Meta matches a visitor to a person who
+saw the ad. A separate subdomain would not get them.
+
+The page uses `navigator.sendBeacon`, which the browser promises to deliver
+even while the page is being torn down. That is the same failure the WhatsApp
+hand-off used to cause, solved properly rather than by waiting half a second.
+
+### The access token
+
+`FB_ACCESS_TOKEN` is a Worker secret. It is not in this repo, not in
+`worker/capi.js`, and must never be committed.
+
+To set or rotate it:
+
+1. In Meta Business settings, create a System User with access to the
+   Zim.company Data dataset, and generate a token with `ads_management`.
+2. Cloudflare dashboard -> Workers & Pages -> `zim-capi` -> Settings ->
+   Variables and Secrets -> add `FB_ACCESS_TOKEN`, **Encrypt**, save.
+
+Until it is set the Worker logs a line and returns `204`. Events are dropped
+rather than erroring, so the page is never affected -- which also means a
+missing token fails quietly. If server events stop appearing in Events
+Manager, check the token first.
+
+`DATASET_ID` is a plain variable, already set to `1670660514650846`.
+
+### Checking it works
+
+Events Manager shows the source of each event. Once the token is set, events
+should arrive marked both *Browser* and *Server*, with deduplication reported.
+Seeing double the expected count means the `event_id` is not matching.
+
+The endpoint only accepts `POST` from this site's own origin -- anything else
+gets `403`. That matters: it is a public URL, and without the check anyone
+could post fake conversions, which would corrupt the signal the campaign
+optimises on rather than merely the reporting.
+
+To redeploy after editing `worker/capi.js`, upload it to the `zim-capi` Worker
+script. Pushing to `main` deploys the site only; the Worker is separate.
 
 ## Domain
 
